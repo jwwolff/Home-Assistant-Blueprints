@@ -1,8 +1,99 @@
 blueprint:
-  name: Motion Light
-  description: Turns a light on based on detected motion. Designed to work with Everything Presense One
+  name: Motion Light with Occupancy, Time & Lux Conditions
+  description: |
+    Turn a light on when motion is detected **and** an occupancy sensor indicates
+    someone is home, but only during a configurable time window and when the ambient
+    light level (lux) is below a certain threshold. The automation also turns the light
+    off after a configurable timeout if no further motion is detected.
   domain: automation
-  
-  
-  
-  triggers:
+  input:
+    target_light:
+      name: Light to control
+      description: The light (or group of lights) that will be turned on.
+      selector:
+        entity:
+          domain: light
+    motion_sensor:
+      name: Motion sensor
+      description: Binary sensor that reports motion.
+      selector:
+        entity:
+          domain: binary_sensor
+    occupancy_sensor:
+      name: Occupancy sensor (optional)
+      description: Binary sensor that indicates if someone is home. If left empty the occupancy check is ignored.
+      default: ""
+      selector:
+        entity:
+          domain: binary_sensor
+    lux_sensor:
+      name: Illuminance sensor (lux)
+      description: Sensor that provides the current illumination in lux.
+      selector:
+        entity:
+          domain: sensor
+    lux_threshold:
+      name: Lux threshold
+      description: Maximum lux value to allow the light to turn on (e.g., 30).
+      default: 30
+      selector:
+        number:
+          min: 0
+          max: 1000
+    active_start_time:
+      name: Active start time (optional)
+      description: The earliest time of day when the automation may trigger.
+      default: "00:00:00"
+      selector:
+        time:
+    active_end_time:
+      name: Active end time (optional)
+      description: The latest time of day when the automation may trigger.
+      default: "23:59:59"
+      selector:
+        time:
+    turn_off_delay:
+      name: Turn‑off delay (seconds)
+      description: How many seconds to keep the light on after the last motion event.
+      default: 300
+      selector:
+        number:
+          min: 0
+          max: 3600
+
+trigger:
+  - platform: state
+    entity_id: !input motion_sensor
+    to: "on"
+
+condition:
+  - condition: or
+    conditions:
+      # If an occupancy sensor is defined, require it to be "on"
+      - condition: template
+        value_template: "{{ not (inputs.occupancy_sensor) or is_state(inputs.occupancy_sensor, 'on') }}"
+  - condition: numeric_state
+    entity_id: !input lux_sensor
+    below: !input lux_threshold
+  - condition: time
+    after: "!input active_start_time"
+    before: "!input active_end_time"
+
+action:
+  # Turn the light on (you can also add brightness, color etc. here)
+  - service: light.turn_on
+    data:
+      entity_id: !input target_light
+
+  # Schedule turning the light off after a delay if no further motion occurs
+  - wait_for_trigger:
+      - platform: state
+        entity_id: !input motion_sensor
+        to: "off"
+    timeout: "{{ (inputs.turn_off_delay | int) }}"
+
+  - service: light.turn_off
+    data:
+      entity_id: !input target_light
+
+mode: restart  # Restart the automation if a new motion event occurs while waiting
