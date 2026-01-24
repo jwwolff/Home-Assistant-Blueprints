@@ -1,0 +1,8 @@
+blueprint:
+  name: Motion Light
+  description: Turns a light on based on detected motion. Designed to work with Everything Presense One
+  domain: automation
+  
+  
+  
+  triggers:
