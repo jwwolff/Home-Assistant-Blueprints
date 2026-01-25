@@ -32,14 +32,6 @@ blueprint:
       selector:
         entity:
           domain: sensor
-    lux_threshold:
-      name: Lux threshold
-      description: Maximum lux value to allow the light to turn on (e.g., 30).
-      default: 30
-      selector:
-        number:
-          min: 0
-          max: 1000
     active_start_time:
       name: Active start time (optional)
       description: The earliest time of day when the automation may trigger.
@@ -72,9 +64,6 @@ condition:
       # If an occupancy sensor is defined, require it to be "on"
       - condition: template
         value_template: "{{ not (inputs.occupancy_sensor) or is_state(inputs.occupancy_sensor, 'on') }}"
-  - condition: numeric_state
-    entity_id: !input lux_sensor
-    below: !input lux_threshold
   - condition: time
     after: "!input active_start_time"
     before: "!input active_end_time"
