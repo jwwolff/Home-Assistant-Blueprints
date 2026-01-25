@@ -53,7 +53,7 @@ blueprint:
       selector:
         time:
     turn_off_delay:
-      name: Turn-off delay (seconds)
+      name: Turn off delay (seconds)
       description: How many seconds to keep the light on after the last motion event.
       default: 300
       selector:
