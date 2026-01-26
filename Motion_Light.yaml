@@ -35,6 +35,7 @@ blueprint:
       description: Optional time range during which the automation is active.
       selector:
         entity:
+          domain: input_datetime
     active_time_end:
       name: Active Time End
       description: Optional time range during which the automation is active.
