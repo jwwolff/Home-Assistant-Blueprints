@@ -34,12 +34,12 @@ blueprint:
       name: Active Time Start
       description: Optional time range during which the automation is active.
       selector:
-        time: {}
+        time:
     active_time_end:
       name: Active Time End
       description: Optional time range during which the automation is active.
       selector:
-        time: {}
+        time:
 
 mode: restart
 max_exceeded: silent
