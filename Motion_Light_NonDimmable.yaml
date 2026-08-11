@@ -8,7 +8,8 @@ blueprint:
   input:
     max_brightness_group:
       name: Max Brightness Group
-      description: Select all switch entities for maximum brightness lights.
+      description: Select all switch entities for maximum brightness lights. Leave empty if not used.
+      required: false
       selector:
         entity:
           domain: switch
@@ -16,7 +17,8 @@ blueprint:
 
     medium_brightness_group:
       name: Medium Brightness Group
-      description: Select all switch entities for medium brightness lights.
+      description: Select all switch entities for medium brightness lights. Leave empty if not used.
+      required: false
       selector:
         entity:
           domain: switch
@@ -24,7 +26,8 @@ blueprint:
 
     low_brightness_group:
       name: Low Brightness Group
-      description: Select all switch entities for low brightness lights.
+      description: Select all switch entities for low brightness lights. Leave empty if not used.
+      required: false
       selector:
         entity:
           domain: switch
@@ -65,55 +68,11 @@ blueprint:
     active_time_end:
       name: Enable
       description: >
-        Switch to enable/disable the automation. When off, the automation
-        will not run regardless of motion detection.
+        Input boolean helper to enable/disable the automation. When off, the
+        automation will not run regardless of motion detection.
       selector:
         entity:
-          domain: switch
-
-    morning_brightness:
-      name: "Morning Brightness (06-09)"
-      description: Brightness percentage during morning hours.
-      default: 50
-      selector:
-        number:
-          min: 1
-          max: 100
-          step: 5
-          unit_of_measurement: "%"
-
-    day_brightness:
-      name: "Day Brightness (09-18)"
-      description: Brightness percentage during daytime hours.
-      default: 100
-      selector:
-        number:
-          min: 1
-          max: 100
-          step: 5
-          unit_of_measurement: "%"
-
-    evening_brightness:
-      name: "Evening Brightness (18-22)"
-      description: Brightness percentage during evening hours.
-      default: 60
-      selector:
-        number:
-          min: 1
-          max: 100
-          step: 5
-          unit_of_measurement: "%"
-
-    night_brightness:
-      name: "Night Brightness (22-06)"
-      description: Brightness percentage during nighttime hours.
-      default: 20
-      selector:
-        number:
-          min: 1
-          max: 100
-          step: 5
-          unit_of_measurement: "%"
+          domain: input_boolean
 
     luminance_sensor:
       name: Luminance Sensor (optional)
@@ -134,7 +93,7 @@ blueprint:
       selector:
         number:
           min: 0
-          max: 2000
+          max: 40
           step: 10
           unit_of_measurement: "lux"
 

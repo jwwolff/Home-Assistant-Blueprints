@@ -56,11 +56,11 @@ blueprint:
     active_time_end:
       name: Enable
       description: >
-        Switch to enable/disable the automation. When off, the automation
-        will not run regardless of motion detection.
+        Input boolean helper to enable/disable the automation. When off, the
+        automation will not run regardless of motion detection.
       selector:
         entity:
-          domain: switch
+          domain: input_boolean
 
     morning_brightness:
       name: "Morning Brightness (06-09)"
@@ -165,7 +165,7 @@ blueprint:
       selector:
         number:
           min: 0
-          max: 2000
+          max: 40
           step: 10
           unit_of_measurement: "lux"
 
