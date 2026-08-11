@@ -20,10 +20,8 @@ blueprint:
           options:
             - label: Native Dimming Light
               value: native_dimming
-              description: Single light with brightness + color temp control
             - label: Switch-Based (Multiple Lights)
               value: switch_based
-              description: Dimmer switch + additional on/off switches
 
     light_entity:
       name: Light(s) or Switch(es)
@@ -81,13 +79,11 @@ blueprint:
     active_time_end:
       name: Active Time End (optional)
       description: >
-        Optional end of time range during which the automation is active.
-        Leave blank to always be active.
+        Optional switch to enable/disable the active time range end. When
+        off, the automation is always active regardless of time.
       selector:
         entity:
-          domain:
-            - input_datetime
-          multiple: false
+          domain: switch
 
     morning_brightness:
       name: "Morning Brightness (06-09)"
@@ -104,7 +100,6 @@ blueprint:
       name: "Day Brightness (09-18)"
       description: Brightness percentage during daytime hours.
       default: 100
-      visible: "{{ inputs.luminance_sensor | length > 0 }}"
       selector:
         number:
           min: 1
@@ -190,7 +185,6 @@ blueprint:
         If the luminance sensor reading is above this value (lux), the light
         will not turn on. Only used when a luminance sensor is selected.
       default: 100
-      visible: "{{ inputs.luminance_sensor | length > 0 }}"
       selector:
         number:
           min: 0
@@ -205,6 +199,9 @@ trigger:
   - platform: state
     entity_id: !input motion_sensor
     to: "on"
+
+  - platform: time
+    at: !input active_time_start
 
 variables:
   light_type: !input light_type
@@ -256,13 +253,23 @@ variables:
     {% endif %}
 
 condition:
-  - condition: time
-    after: !input active_time_start
-    before: !input active_time_end
+  - condition: state
+    entity_id: !input active_time_end
+    state: "on"
 
 action:
   - choose:
       - conditions:
+          - condition: template
+            value_template: "{{ trigger.platform == 'time' }}"
+        sequence:
+          - service: switch.turn_on
+            target:
+              entity_id: !input active_time_end
+
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.platform == 'state' }}"
           - condition: template
             value_template: "{{ not skip_light }}"
         sequence:
