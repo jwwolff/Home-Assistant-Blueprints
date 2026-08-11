@@ -170,8 +170,6 @@ trigger:
     entity_id: !input motion_sensor
     to: "on"
 
-  - platform: time
-    at: !input active_time_start
 
 variables:
   light_entity: !input light_entity
@@ -219,14 +217,6 @@ condition:
 
 action:
   - choose:
-      - conditions:
-          - condition: template
-            value_template: "{{ trigger.platform == 'time' }}"
-        sequence:
-          - service: switch.turn_on
-            target:
-              entity_id: !input active_time_end
-
       - conditions:
           - condition: template
             value_template: "{{ trigger.platform == 'state' }}"
