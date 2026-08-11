@@ -1,17 +1,33 @@
 blueprint:
-  name: Advanced Motion Activated Light with Time-Based Dimming
+  name: Advanced Motion Activated Light Group with Time-Based Brightness
   description: >
-    Turns a dimmable light on when motion detected, then off after motion clears.
-    Brightness and color temperature vary by time of day.
-    Also controls additional non-dimmable lights as a group.
+    Turns on groups of non-dimmable lights when motion detected, then off
+    after motion clears. Three switch groups (Max, Medium, Low brightness)
+    are activated based on time of day.
   domain: automation
   input:
-    light_entity:
-      name: Light(s)
-      description: Select the non-dimmable light entities.
+    max_brightness_group:
+      name: Max Brightness Group
+      description: Select all switch entities for maximum brightness lights.
       selector:
         entity:
-          domain: light
+          domain: switch
+          multiple: true
+
+    medium_brightness_group:
+      name: Medium Brightness Group
+      description: Select all switch entities for medium brightness lights.
+      selector:
+        entity:
+          domain: switch
+          multiple: true
+
+    low_brightness_group:
+      name: Low Brightness Group
+      description: Select all switch entities for low brightness lights.
+      selector:
+        entity:
+          domain: switch
           multiple: true
 
     motion_sensor:
@@ -36,13 +52,6 @@ blueprint:
           max: 3600
           step: 15
           unit_of_measurement: seconds
-
-    dimmer_switch:
-      name: Dimmer Light
-      description: Select the dimmable light that controls brightness.
-      selector:
-        entity:
-          domain: light
 
     active_time_start:
       name: Active Time Start (optional)
@@ -106,46 +115,6 @@ blueprint:
           step: 5
           unit_of_measurement: "%"
 
-    morning_color_temp:
-      name: "Morning Color Temp (mired)"
-      description: "e.g. 350 = 2857 K, warm-white for mornings"
-      default: 350
-      selector:
-        number:
-          min: 153
-          max: 500
-          step: 1
-
-    day_color_temp:
-      name: "Day Color Temp (mired)"
-      description: "e.g. 300 = 3333 K, neutral-white for daytime"
-      default: 300
-      selector:
-        number:
-          min: 153
-          max: 500
-          step: 1
-
-    evening_color_temp:
-      name: "Evening Color Temp (mired)"
-      description: "e.g. 370 = 2703 K, warm-white for evenings"
-      default: 370
-      selector:
-        number:
-          min: 153
-          max: 500
-          step: 1
-
-    night_color_temp:
-      name: "Night Color Temp (mired)"
-      description: "e.g. 400 = 2500 K, very warm for nighttime"
-      default: 400
-      selector:
-        number:
-          min: 153
-          max: 500
-          step: 1
-
     luminance_sensor:
       name: Luminance Sensor (optional)
       description: >
@@ -181,41 +150,36 @@ trigger:
     at: !input active_time_start
 
 variables:
-  light_entity: !input light_entity
+  max_brightness_group: !input max_brightness_group
+  medium_brightness_group: !input medium_brightness_group
+  low_brightness_group: !input low_brightness_group
   wait_period: !input wait_period
-  dimmer_switch: !input dimmer_switch
 
-  current_brightness: >
+  max_on: >
     {% set h = now().hour %}
-    {% if h >= 6 and h < 9 %}
-      {{ inputs.morning_brightness }}
-    {% elif h >= 9 and h < 18 %}
-      {{ inputs.day_brightness }}
-    {% elif h >= 18 and h < 22 %}
-      {{ inputs.evening_brightness }}
-    {% else %}
-      {{ inputs.night_brightness }}
-    {% endif %}
+    {{ h >= 9 and h < 18 }}
 
-  current_color_temp: >
+  medium_on: >
     {% set h = now().hour %}
-    {% if h >= 6 and h < 9 %}
-      {{ inputs.morning_color_temp }}
-    {% elif h >= 9 and h < 18 %}
-      {{ inputs.day_color_temp }}
-    {% elif h >= 18 and h < 22 %}
-      {{ inputs.evening_color_temp }}
-    {% else %}
-      {{ inputs.night_color_temp }}
-    {% endif %}
+    {{ (h >= 6 and h < 9) or (h >= 18 and h < 22) }}
 
-  brightness_value: >
-    {{ (current_brightness | float / 100 * 255) | round | int }}
+  low_on: >
+    true
 
   skip_light: >
-    {% set sensor = inputs.luminance_sensor %}
-    {% if sensor and states(sensor) not in ['unknown', 'unavailable', 'none'] %}
-      {{ (states(sensor) | float > inputs.luminance_threshold) }}
+    {% set max_entities = inputs.max_brightness_group %}
+    {% set med_entities = inputs.medium_brightness_group %}
+    {% set low_entities = inputs.low_brightness_group %}
+    {% set any_on = false %}
+    {% for entity in max_entities + med_entities + low_entities %}
+      {% if is_state(entity, 'on') %}
+        {% set any_on = true %}
+      {% endif %}
+    {% endfor %}
+    {% if any_on %}
+      false
+    {% elif inputs.luminance_sensor and states(inputs.luminance_sensor) not in ['unknown', 'unavailable', 'none'] %}
+      {{ (states(inputs.luminance_sensor) | float > inputs.luminance_threshold) }}
     {% else %}
       false
     {% endif %}
@@ -241,14 +205,30 @@ action:
           - condition: template
             value_template: "{{ not skip_light }}"
         sequence:
-          - service: light.turn_on
-            target:
-              entity_id: "{{ dimmer_switch }}"
-            data:
-              brightness: "{{ brightness_value }}"
-          - service: light.turn_on
-            target:
-              entity_id: "{{ light_entity }}"
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ inputs.max_on }}"
+                sequence:
+                  - service: switch.turn_on
+                    target:
+                      entity_id: "{{ inputs.max_brightness_group }}"
+
+              - conditions:
+                  - condition: template
+                    value_template: "{{ inputs.medium_on }}"
+                sequence:
+                  - service: switch.turn_on
+                    target:
+                      entity_id: "{{ inputs.medium_brightness_group }}"
+
+              - conditions:
+                  - condition: template
+                    value_template: "{{ inputs.low_on }}"
+                sequence:
+                  - service: switch.turn_on
+                    target:
+                      entity_id: "{{ inputs.low_brightness_group }}"
 
   - wait_for_trigger:
       - platform: state
@@ -257,9 +237,7 @@ action:
 
   - delay: !input wait_period
 
-  - service: light.turn_off
+  - service: switch.turn_off
     target:
-      entity_id: "{{ dimmer_switch }}"
-  - service: light.turn_off
-    target:
-      entity_id: "{{ light_entity }}"
+      entity_id: >
+        {{ [inputs.max_brightness_group, inputs.medium_brightness_group, inputs.low_brightness_group] | flatten | list }}
