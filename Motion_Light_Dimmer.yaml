@@ -131,14 +131,15 @@ blueprint:
           step: 1
 
     luminance_sensor:
-      name: Luminance Sensor (optional)
+      name: Luminance Sensor
       description: >
-        Select a luminance/illuminance sensor. If set and the reading is
-        above the luminance threshold, the light will NOT turn on. Leave
-        blank to always turn on when motion is detected.
+        Select a luminance/illuminance sensor. When the reading is above
+        the luminance threshold, the light will NOT turn on. Leave blank
+        to always turn on when motion is detected.
       selector:
         entity:
           domain: sensor
+          multiple: true
 
     luminance_threshold:
       name: Luminance Threshold
