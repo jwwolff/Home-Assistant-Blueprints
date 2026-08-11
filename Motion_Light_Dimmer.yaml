@@ -1,233 +1,240 @@
 blueprint:
-    name: Advanced Motion Activated Light with Time-Based Dimming
-    description: >
-      Turns dimmable lights on when motion is detected, then off after motion clears.
-      Brightness and color temperature vary by time of day.
-    domain: automation
+  name: Advanced Motion Activated Light with Time-Based Dimming
+  description: >
+    Turns dimmable lights on when motion is detected, then off after motion clears.
+    Brightness and color temperature vary by time of day.
+  domain: automation
 
-    input:
-      light_entity:
-        name: Light(s)
-        description: Select the dimmable light entities.
-        selector:
-          entity:
-            domain: light
-            multiple: true
+  input:
+    light_entity:
+      name: Light(s)
+      description: Select the dimmable light entities.
+      selector:
+        entity:
+          domain: light
+          multiple: true
 
-      motion_sensor:
-        name: Motion Sensor
-        description: Select the motion sensor to monitor.
-        selector:
-          entity:
-            domain: binary_sensor
-            device_class:
-              - motion
-              - occupancy
+    motion_sensor:
+      name: Motion Sensor
+      description: Select the motion sensor to monitor.
+      selector:
+        entity:
+          domain: binary_sensor
+          device_class:
+            - motion
+            - occupancy
 
-      wait_period:
-        name: Wait Period
-        description: Time in seconds to wait after motion stops before turning off the lights.
-        default: 360
-        selector:
-          number:
-            min: 0
-            max: 3600
-            step: 15
-            unit_of_measurement: seconds
+    wait_period:
+      name: Wait Period
+      description: Time in seconds to wait after motion stops before turning off the lights.
+      default: 360
+      selector:
+        number:
+          min: 0
+          max: 3600
+          step: 15
+          unit_of_measurement: seconds
 
-      enable_switch:
-        name: Enable
-        description: Input boolean helper to enable or disable the automation.
-        selector:
-          entity:
-            domain: input_boolean
+    enable_switch:
+      name: Enable
+      description: Input boolean helper to enable or disable the automation.
+      selector:
+        entity:
+          domain: input_boolean
 
-      morning_brightness:
-        name: Morning Brightness (06-09)
-        description: Brightness percentage during morning hours.
-        default: 50
-        selector:
-          number:
-            min: 1
-            max: 100
-            step: 5
-            unit_of_measurement: "%"
+    morning_brightness:
+      name: Morning Brightness (06-09)
+      description: Brightness percentage during morning hours.
+      default: 50
+      selector:
+        number:
+          min: 1
+          max: 100
+          step: 5
+          unit_of_measurement: "%"
 
-      day_brightness:
-        name: Day Brightness (09-18)
-        description: Brightness percentage during daytime hours.
-        default: 100
-        selector:
-          number:
-            min: 1
-            max: 100
-            step: 5
-            unit_of_measurement: "%"
+    day_brightness:
+      name: Day Brightness (09-18)
+      description: Brightness percentage during daytime hours.
+      default: 100
+      selector:
+        number:
+          min: 1
+          max: 100
+          step: 5
+          unit_of_measurement: "%"
 
-      evening_brightness:
-        name: Evening Brightness (18-22)
-        description: Brightness percentage during evening hours.
-        default: 60
-        selector:
-          number:
-            min: 1
-            max: 100
-            step: 5
-            unit_of_measurement: "%"
+    evening_brightness:
+      name: Evening Brightness (18-22)
+      description: Brightness percentage during evening hours.
+      default: 60
+      selector:
+        number:
+          min: 1
+          max: 100
+          step: 5
+          unit_of_measurement: "%"
 
-      night_brightness:
-        name: Night Brightness (22-06)
-        description: Brightness percentage during nighttime hours.
-        default: 20
-        selector:
-          number:
-            min: 1
-            max: 100
-            step: 5
-            unit_of_measurement: "%"
+    night_brightness:
+      name: Night Brightness (22-06)
+      description: Brightness percentage during nighttime hours.
+      default: 20
+      selector:
+        number:
+          min: 1
+          max: 100
+          step: 5
+          unit_of_measurement: "%"
 
-      morning_color_temp:
-        name: Morning Color Temp (mired)
-        description: e.g. 350 = 2857 K, warm-white for mornings.
-        default: 350
-        selector:
-          number:
-            min: 153
-            max: 500
-            step: 1
+    morning_color_temp:
+      name: Morning Color Temp (mired)
+      description: "e.g. 350 = 2857 K, warm-white for mornings"
+      default: 350
+      selector:
+        number:
+          min: 153
+          max: 500
+          step: 1
 
-      day_color_temp:
-        name: Day Color Temp (mired)
-        description: e.g. 300 = 3333 K, neutral-white for daytime.
-        default: 300
-        selector:
-          number:
-            min: 153
-            max: 500
-            step: 1
+    day_color_temp:
+      name: Day Color Temp (mired)
+      description: "e.g. 300 = 3333 K, neutral-white for daytime"
+      default: 300
+      selector:
+        number:
+          min: 153
+          max: 500
+          step: 1
 
-      evening_color_temp:
-        name: Evening Color Temp (mired)
-        description: e.g. 370 = 2703 K, warm-white for evenings.
-        default: 370
-        selector:
-          number:
-            min: 153
-            max: 500
-            step: 1
+    evening_color_temp:
+      name: Evening Color Temp (mired)
+      description: "e.g. 370 = 2703 K, warm-white for evenings"
+      default: 370
+      selector:
+        number:
+          min: 153
+          max: 500
+          step: 1
 
-      night_color_temp:
-        name: Night Color Temp (mired)
-        description: e.g. 400 = 2500 K, very warm for nighttime.
-        default: 400
-        selector:
-          number:
-            min: 153
-            max: 500
-            step: 1
+    night_color_temp:
+      name: Night Color Temp (mired)
+      description: "e.g. 400 = 2500 K, very warm for nighttime"
+      default: 400
+      selector:
+        number:
+          min: 153
+          max: 500
+          step: 1
 
-      luminance_sensor:
-        name: Luminance Sensor
-        description: >
-          Optional sensor to block turn-on when ambient light is already above
-          the threshold.
-        selector:
-          entity:
-            domain: sensor
+    luminance_sensor:
+      name: Luminance Sensor
+      description: >
+        Optional sensor to block turn-on when ambient light is already above
+        the threshold.
+      selector:
+        entity:
+          domain: sensor
+          multiple: true
 
-      luminance_threshold:
-        name: Luminance Threshold
-        description: If the luminance sensor reading is above this value in lux, the lights will not turn on.
-        default: 100
-        selector:
-          number:
-            min: 0
-            max: 40000
-            step: 10
-            unit_of_measurement: lux
+    luminance_threshold:
+      name: Luminance Threshold
+      description: If the luminance sensor reading is above this value in lux, the lights will not turn on.
+      default: 100
+      selector:
+        number:
+          min: 0
+          max: 40000
+          step: 10
+          unit_of_measurement: lux
 
-  mode: restart
-  max_exceeded: silent
+mode: restart
+max_exceeded: silent
 
-  trigger:
-    - platform: state
-      entity_id: !input motion_sensor
-      to: "on"
+trigger:
+  - platform: state
+    entity_id: !input motion_sensor
+    to: "on"
 
-  variables:
-    light_entity: !input light_entity
-    wait_period: !input wait_period
-    enable_switch: !input enable_switch
-    morning_brightness: !input morning_brightness
-    day_brightness: !input day_brightness
-    evening_brightness: !input evening_brightness
-    night_brightness: !input night_brightness
-    morning_color_temp: !input morning_color_temp
-    day_color_temp: !input day_color_temp
-    evening_color_temp: !input evening_color_temp
-    night_color_temp: !input night_color_temp
-    luminance_sensor: !input luminance_sensor
-    luminance_threshold: !input luminance_threshold
+variables:
+  light_entity: !input light_entity
+  wait_period: !input wait_period
+  enable_switch: !input enable_switch
+  morning_brightness: !input morning_brightness
+  day_brightness: !input day_brightness
+  evening_brightness: !input evening_brightness
+  night_brightness: !input night_brightness
+  morning_color_temp: !input morning_color_temp
+  day_color_temp: !input day_color_temp
+  evening_color_temp: !input evening_color_temp
+  night_color_temp: !input night_color_temp
+  luminance_sensor: !input luminance_sensor
+  luminance_threshold: !input luminance_threshold
 
-    current_brightness: >
-      {% set h = now().hour %}
-      {% if h >= 6 and h < 9 %}
-        {{ morning_brightness }}
-      {% elif h >= 9 and h < 18 %}
-        {{ day_brightness }}
-      {% elif h >= 18 and h < 22 %}
-        {{ evening_brightness }}
-      {% else %}
-        {{ night_brightness }}
-      {% endif %}
+  current_brightness: >
+    {% set h = now().hour %}
+    {% if h >= 6 and h < 9 %}
+      {{ morning_brightness }}
+    {% elif h >= 9 and h < 18 %}
+      {{ day_brightness }}
+    {% elif h >= 18 and h < 22 %}
+      {{ evening_brightness }}
+    {% else %}
+      {{ night_brightness }}
+    {% endif %}
 
-    current_color_temp: >
-      {% set h = now().hour %}
-      {% if h >= 6 and h < 9 %}
-        {{ morning_color_temp }}
-      {% elif h >= 9 and h < 18 %}
-        {{ day_color_temp }}
-      {% elif h >= 18 and h < 22 %}
-        {{ evening_color_temp }}
-      {% else %}
-        {{ night_color_temp }}
-      {% endif %}
+  current_color_temp: >
+    {% set h = now().hour %}
+    {% if h >= 6 and h < 9 %}
+      {{ morning_color_temp }}
+    {% elif h >= 9 and h < 18 %}
+      {{ day_color_temp }}
+    {% elif h >= 18 and h < 22 %}
+      {{ evening_color_temp }}
+    {% else %}
+      {{ night_color_temp }}
+    {% endif %}
 
-    brightness_value: >
-      {{ (current_brightness | float / 100 * 255) | round | int }}
+  brightness_value: >
+    {{ (current_brightness | float / 100 * 255) | round | int }}
 
-    skip_light: >
-      {% if luminance_sensor and states(luminance_sensor) not in ['unknown', 'unavailable', 'none'] %}
-        {{ states(luminance_sensor) | float > luminance_threshold }}
-      {% else %}
-        false
-      {% endif %}
+  skip_light: >
+    {% if luminance_sensor %}
+      {% set ns = namespace(block=false) %}
+      {% for sensor in luminance_sensor %}
+        {% if states(sensor) not in ['unknown', 'unavailable', 'none'] and (states(sensor) | float(0) > luminance_threshold | float(0)) %}
+          {% set ns.block = true %}
+        {% endif %}
+      {% endfor %}
+      {{ ns.block }}
+    {% else %}
+      false
+    {% endif %}
 
-  condition:
-    - condition: state
-      entity_id: !input enable_switch
-      state: "on"
+condition:
+  - condition: state
+    entity_id: !input enable_switch
+    state: "on"
 
-  action:
-    - choose:
-        - conditions:
-            - condition: template
-              value_template: "{{ not skip_light }}"
-          sequence:
-            - service: light.turn_on
-              target:
-                entity_id: !input light_entity
-              data:
-                brightness: "{{ brightness_value }}"
-                color_temp: "{{ current_color_temp }}"
+action:
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ not (skip_light | bool) }}"
+        sequence:
+          - service: light.turn_on
+            target:
+              entity_id: !input light_entity
+            data:
+              brightness: "{{ brightness_value }}"
+              color_temp: "{{ current_color_temp }}"
 
-    - wait_for_trigger:
-        - platform: state
-          entity_id: !input motion_sensor
-          to: "off"
+  - wait_for_trigger:
+      - platform: state
+        entity_id: !input motion_sensor
+        to: "off"
 
-    - delay: !input wait_period
+  - delay: !input wait_period
 
-    - service: light.turn_off
-      target:
-        entity_id: !input light_entity
+  - service: light.turn_off
+    target:
+      entity_id: !input light_entity
