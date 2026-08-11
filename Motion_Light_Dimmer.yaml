@@ -1,0 +1,316 @@
+blueprint:
+  name: Advanced Motion Activated Light with Time-Based Dimming
+  description: >
+    Turns light on when motion detected, then off after motion clears.
+    Brightness and color temperature vary by time of day.
+    Supports native dimming lights or switch-based multi-light setups.
+  domain: automation
+  input:
+    light_type:
+      name: Light Type
+      description: >
+        Native dimming: a single light entity that supports brightness and
+        color temperature natively.
+        Switch-based: multiple switch entities where one switch is the dimmer
+        (controls brightness) and the others are on/off switches for additional
+        lights.
+      default: native_dimming
+      selector:
+        select:
+          options:
+            - label: Native Dimming Light
+              value: native_dimming
+              description: Single light with brightness + color temp control
+            - label: Switch-Based (Multiple Lights)
+              value: switch_based
+              description: Dimmer switch + additional on/off switches
+
+    light_entity:
+      name: Light(s) or Switch(es)
+      description: >
+        For native dimming: select the light entity.
+        For switch-based: select all switches EXCEPT the dimmer switch.
+      selector:
+        entity:
+          domain:
+            - light
+            - switch
+          multiple: true
+
+    motion_sensor:
+      name: Motion Sensor
+      description: Select the motion sensor to monitor.
+      selector:
+        entity:
+          domain: binary_sensor
+          device_class:
+            - motion
+            - occupancy
+
+    wait_period:
+      name: Wait Period
+      description: >
+        Time in seconds to wait after motion stops before turning off the
+        light.
+      default: 360
+      selector:
+        number:
+          min: 0
+          max: 3600
+          step: 15
+          unit_of_measurement: seconds
+
+    dimmer_switch:
+      name: Dimmer Switch
+      description: >
+        For switch-based setups only. Select the dimmer switch that controls
+        brightness. Leave blank for native dimming lights.
+      selector:
+        entity:
+          domain: switch
+
+    active_time_start:
+      name: Active Time Start (optional)
+      description: >
+        Optional start of time range during which the automation is active.
+        Leave blank to always be active.
+      selector:
+        entity:
+          domain: input_datetime
+
+    active_time_end:
+      name: Active Time End (optional)
+      description: >
+        Optional end of time range during which the automation is active.
+        Leave blank to always be active.
+      selector:
+        time:
+
+    morning_brightness:
+      name: "Morning Brightness (06-09)"
+      description: Brightness percentage during morning hours.
+      default: 50
+      selector:
+        number:
+          min: 1
+          max: 100
+          step: 5
+          unit_of_measurement: "%"
+
+    day_brightness:
+      name: "Day Brightness (09-18)"
+      description: Brightness percentage during daytime hours.
+      default: 100
+      visible: "{{ inputs.luminance_sensor | length > 0 }}"
+      selector:
+        number:
+          min: 1
+          max: 100
+          step: 5
+          unit_of_measurement: "%"
+
+    evening_brightness:
+      name: "Evening Brightness (18-22)"
+      description: Brightness percentage during evening hours.
+      default: 60
+      selector:
+        number:
+          min: 1
+          max: 100
+          step: 5
+          unit_of_measurement: "%"
+
+    night_brightness:
+      name: "Night Brightness (22-06)"
+      description: Brightness percentage during nighttime hours.
+      default: 20
+      selector:
+        number:
+          min: 1
+          max: 100
+          step: 5
+          unit_of_measurement: "%"
+
+    morning_color_temp:
+      name: "Morning Color Temp (mired)"
+      description: "e.g. 350 = 2857 K, warm-white for mornings"
+      default: 350
+      selector:
+        number:
+          min: 153
+          max: 500
+          step: 1
+
+    day_color_temp:
+      name: "Day Color Temp (mired)"
+      description: "e.g. 300 = 3333 K, neutral-white for daytime"
+      default: 300
+      selector:
+        number:
+          min: 153
+          max: 500
+          step: 1
+
+    evening_color_temp:
+      name: "Evening Color Temp (mired)"
+      description: "e.g. 370 = 2703 K, warm-white for evenings"
+      default: 370
+      selector:
+        number:
+          min: 153
+          max: 500
+          step: 1
+
+    night_color_temp:
+      name: "Night Color Temp (mired)"
+      description: "e.g. 400 = 2500 K, very warm for nighttime"
+      default: 400
+      selector:
+        number:
+          min: 153
+          max: 500
+          step: 1
+
+    luminance_sensor:
+      name: Luminance Sensor (optional)
+      description: >
+        Select a luminance/illuminance sensor. If set and the reading is
+        above the luminance threshold, the light will NOT turn on. Leave
+        blank to always turn on when motion is detected.
+      selector:
+        entity:
+          domain: sensor
+
+    luminance_threshold:
+      name: Luminance Threshold
+      description: >
+        If the luminance sensor reading is above this value (lux), the light
+        will not turn on. Only used when a luminance sensor is selected.
+      default: 100
+      visible: "{{ inputs.luminance_sensor | length > 0 }}"
+      selector:
+        number:
+          min: 0
+          max: 2000
+          step: 10
+          unit_of_measurement: "lux"
+
+mode: restart
+max_exceeded: silent
+
+trigger:
+  - platform: state
+    entity_id: !input motion_sensor
+    to: "on"
+
+variables:
+  light_type: !input light_type
+  light_entity: !input light_entity
+  wait_period: !input wait_period
+  dimmer_switch: !input dimmer_switch
+
+  current_brightness: >
+    {% set h = now().hour %}
+    {% if h >= 6 and h < 9 %}
+      {{ inputs.morning_brightness }}
+    {% elif h >= 9 and h < 18 %}
+      {{ inputs.day_brightness }}
+    {% elif h >= 18 and h < 22 %}
+      {{ inputs.evening_brightness }}
+    {% else %}
+      {{ inputs.night_brightness }}
+    {% endif %}
+
+  current_color_temp: >
+    {% set h = now().hour %}
+    {% if h >= 6 and h < 9 %}
+      {{ inputs.morning_color_temp }}
+    {% elif h >= 9 and h < 18 %}
+      {{ inputs.day_color_temp }}
+    {% elif h >= 18 and h < 22 %}
+      {{ inputs.evening_color_temp }}
+    {% else %}
+      {{ inputs.night_color_temp }}
+    {% endif %}
+
+  brightness_value: >
+    {{ (current_brightness | float / 100 * 255) | round | int }}
+
+  time_label: >
+    {% set h = now().hour %}
+    {% if h >= 6 and h < 9 %} Morning
+    {% elif h >= 9 and h < 18 %} Daytime
+    {% elif h >= 18 and h < 22 %} Evening
+    {% else %} Night
+    {% endif %}
+
+  skip_light: >
+    {% set sensor = inputs.luminance_sensor %}
+    {% if sensor and states(sensor) not in ['unknown', 'unavailable', 'none'] %}
+      {{ (states(sensor) | float > inputs.luminance_threshold) }}
+    {% else %}
+      false
+    {% endif %}
+
+condition:
+  - condition: time
+    after: !input active_time_start
+    before: !input active_time_end
+
+action:
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ not skip_light }}"
+        sequence:
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ light_type == 'native_dimming' }}"
+                sequence:
+                  - service: light.turn_on
+                    target:
+                      entity_id: "{{ light_entity }}"
+                    data:
+                      brightness: "{{ brightness_value }}"
+                      color_temp: "{{ current_color_temp }}"
+
+              - conditions:
+                  - condition: template
+                    value_template: "{{ light_type == 'switch_based' }}"
+                sequence:
+                  - service: light.turn_on
+                    target:
+                      entity_id: "{{ dimmer_switch }}"
+                    data:
+                      brightness: "{{ brightness_value }}"
+                  - service: switch.turn_on
+                    target:
+                      entity_id: "{{ light_entity }}"
+
+  - wait_for_trigger:
+      - platform: state
+        entity_id: !input motion_sensor
+        to: "off"
+
+  - delay: !input wait_period
+
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ light_type == 'native_dimming' }}"
+        sequence:
+          - service: light.turn_off
+            target:
+              entity_id: "{{ light_entity }}"
+
+      - conditions:
+          - condition: template
+            value_template: "{{ light_type == 'switch_based' }}"
+        sequence:
+          - service: light.turn_off
+            target:
+              entity_id: "{{ dimmer_switch }}"
+          - service: switch.turn_off
+            target:
+              entity_id: "{{ light_entity }}"
