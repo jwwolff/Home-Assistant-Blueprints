@@ -9,7 +9,6 @@ blueprint:
     max_brightness_group:
       name: Max Brightness Group
       description: Select all switch entities for maximum brightness lights. Leave empty if not used.
-      required: false
       selector:
         entity:
           domain: switch
@@ -18,7 +17,6 @@ blueprint:
     medium_brightness_group:
       name: Medium Brightness Group
       description: Select all switch entities for medium brightness lights. Leave empty if not used.
-      required: false
       selector:
         entity:
           domain: switch
@@ -27,7 +25,6 @@ blueprint:
     low_brightness_group:
       name: Low Brightness Group
       description: Select all switch entities for low brightness lights. Leave empty if not used.
-      required: false
       selector:
         entity:
           domain: switch
