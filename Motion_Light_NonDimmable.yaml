@@ -1,198 +1,192 @@
 blueprint:
-  name: Advanced Motion Activated Light Group with Time-Based Brightness
-  description: >
-    Turns on groups of non-dimmable lights when motion detected, then off
-    after motion clears. Three switch groups (Max, Medium, Low brightness)
-    are activated based on time of day.
-  domain: automation
-  input:
-    max_brightness_group:
-      name: Max Brightness Group
-      description: Select all switch entities for maximum brightness lights. Leave empty if not used.
-      selector:
-        entity:
-          domain: switch
-          multiple: true
+    name: Advanced Motion Activated Light Group with Time-Based Brightness
+    description: >
+      Turns on groups of non-dimmable lights when motion is detected, then off
+      after motion clears. Three switch groups (Max, Medium, Low brightness)
+      are activated based on time of day.
+    domain: automation
 
-    medium_brightness_group:
-      name: Medium Brightness Group
-      description: Select all switch entities for medium brightness lights. Leave empty if not used.
-      selector:
-        entity:
-          domain: switch
-          multiple: true
+    input:
+      max_brightness_group:
+        name: Max Brightness Group
+        description: Select all switch entities for maximum brightness lights. Leave empty if not used.
+        selector:
+          entity:
+            domain: switch
+            multiple: true
 
-    low_brightness_group:
-      name: Low Brightness Group
-      description: Select all switch entities for low brightness lights. Leave empty if not used.
-      selector:
-        entity:
-          domain: switch
-          multiple: true
+      medium_brightness_group:
+        name: Medium Brightness Group
+        description: Select all switch entities for medium brightness lights. Leave empty if not used.
+        selector:
+          entity:
+            domain: switch
+            multiple: true
 
-    motion_sensor:
-      name: Motion Sensor
-      description: Select the motion sensor to monitor.
-      selector:
-        entity:
-          domain: binary_sensor
-          device_class:
-            - motion
-            - occupancy
+      low_brightness_group:
+        name: Low Brightness Group
+        description: Select all switch entities for low brightness lights. Leave empty if not used.
+        selector:
+          entity:
+            domain: switch
+            multiple: true
 
-    wait_period:
-      name: Wait Period
-      description: >
-        Time in seconds to wait after motion stops before turning off the
-        light.
-      default: 360
-      selector:
-        number:
-          min: 0
-          max: 3600
-          step: 15
-          unit_of_measurement: seconds
+      motion_sensor:
+        name: Motion Sensor
+        description: Select the motion sensor to monitor.
+        selector:
+          entity:
+            domain: binary_sensor
+            device_class:
+              - motion
+              - occupancy
 
-    Enable_Switch:
-      name: Enable
-      description: >
-        Input boolean helper to enable/disable the automation. When off, the
-        automation will not run regardless of motion detection.
-      selector:
-        entity:
-          domain: input_boolean
+      wait_period:
+        name: Wait Period
+        description: Time in seconds to wait after motion stops before turning off the lights.
+        default: 360
+        selector:
+          number:
+            min: 0
+            max: 3600
+            step: 15
+            unit_of_measurement: seconds
 
-    luminance_sensor:
-      name: Luminance Sensor
-      description: >
-        Select a luminance/illuminance sensor. When the reading is above
-        the luminance threshold, the light will NOT turn on. Leave blank
-        to always turn on when motion is detected.
-      selector:
-        entity:
-          domain: sensor
-          multiple: true
+      enable_switch:
+        name: Enable
+        description: Input boolean helper to enable or disable the automation.
+        selector:
+          entity:
+            domain: input_boolean
 
-    luminance_threshold:
-      name: Luminance Threshold
-      description: >
-        If the luminance sensor reading is above this value (lux), the light
-        will not turn on. Only used when a luminance sensor is selected.
-      default: 100
-      selector:
-        number:
-          min: 0
-          max: 40
-          step: 10
-          unit_of_measurement: "lux"
+      luminance_sensor:
+        name: Luminance Sensor
+        description: >
+          Select a luminance/illuminance sensor. When the reading is above
+          the luminance threshold, the lights will not turn on. Leave blank
+          to always turn on when motion is detected.
+        selector:
+          entity:
+            domain: sensor
+            multiple: true
 
-mode: restart
-max_exceeded: silent
+      luminance_threshold:
+        name: Luminance Threshold
+        description: If the luminance sensor reading is above this value, the lights will not turn on.
+        default: 100
+        selector:
+          number:
+            min: 0
+            max: 40000
+            step: 10
+            unit_of_measurement: lux
 
-trigger:
-  - platform: state
-    entity_id: !input motion_sensor
-    to: "on"
+  mode: restart
+  max_exceeded: silent
 
-variables:
-  max_brightness_group: !input max_brightness_group
-  medium_brightness_group: !input medium_brightness_group
-  low_brightness_group: !input low_brightness_group
-  wait_period: !input wait_period
+  trigger:
+    - platform: state
+      entity_id: !input motion_sensor
+      to: "on"
 
-  max_on: >
-    {% set h = now().hour %}
-    {{ h >= 9 and h < 18 }}
+  variables:
+    max_brightness_group: !input max_brightness_group
+    medium_brightness_group: !input medium_brightness_group
+    low_brightness_group: !input low_brightness_group
+    luminance_sensor: !input luminance_sensor
+    luminance_threshold: !input luminance_threshold
 
-  medium_on: >
-    {% set h = now().hour %}
-    {{ (h >= 6 and h < 9) or (h >= 18 and h < 22) }}
+    max_on: >
+      {% set h = now().hour %}
+      {{ h >= 9 and h < 18 }}
 
-  low_on: >
-    true
+    medium_on: >
+      {% set h = now().hour %}
+      {{ (h >= 6 and h < 9) or (h >= 18 and h < 22) }}
 
-  skip_light: >
-    {% set max_entities = inputs.max_brightness_group %}
-    {% set med_entities = inputs.medium_brightness_group %}
-    {% set low_entities = inputs.low_brightness_group %}
-    {% set any_on = false %}
-    {% for entity in max_entities + med_entities + low_entities %}
-      {% if is_state(entity, 'on') %}
-        {% set any_on = true %}
-      {% endif %}
-    {% endfor %}
-    {% if any_on %}
-      false
-    {% elif inputs.luminance_sensor and states(inputs.luminance_sensor) not in ['unknown', 'unavailable', 'none'] %}
-      {{ (states(inputs.luminance_sensor) | float > inputs.luminance_threshold) }}
-    {% else %}
-      false
-    {% endif %}
+    skip_light: >
+      {% set ns = namespace(block=false) %}
+      {% for sensor in luminance_sensor %}
+        {% if states(sensor) not in ['unknown', 'unavailable', 'none'] and (states(sensor) | float(0) > luminance_threshold |
+        float(0)) %}
+          {% set ns.block = true %}
+        {% endif %}
+      {% endfor %}
+      {{ ns.block }}
 
-condition:
-  - condition: state
-    entity_id: !input Enable_Switch
-    state: "on"
+  condition:
+    - condition: state
+      entity_id: !input enable_switch
+      state: "on"
 
-action:
-  - choose:
-      - conditions:
-          - condition: template
-            value_template: "{{ not skip_light }}"
-        sequence:
-          - choose:
-              - conditions:
-                  - condition: template
-                    value_template: "{{ max_brightness_group | length > 0 }}"
-                sequence:
-                  - service: switch.turn_on
-                    target:
-                      entity_id: "{{ max_brightness_group }}"
-          - choose:
-              - conditions:
-                  - condition: template
-                    value_template: "{{ medium_brightness_group | length > 0 }}"
-                sequence:
-                  - service: switch.turn_on
-                    target:
-                      entity_id: "{{ medium_brightness_group }}"
-          - choose:
-              - conditions:
-                  - condition: template
-                    value_template: "{{ low_brightness_group | length > 0 }}"
-                sequence:
-                  - service: switch.turn_on
-                    target:
-                      entity_id: "{{ low_brightness_group }}"
+  action:
+    - choose:
+        - conditions:
+            - condition: template
+              value_template: "{{ not (skip_light | bool) }}"
+          sequence:
+            - choose:
+                - conditions:
+                    - condition: template
+                      value_template: "{{ (max_on | bool) and (max_brightness_group | length > 0) }}"
+                  sequence:
+                    - service: switch.turn_on
+                      target:
+                        entity_id: !input max_brightness_group
 
-  - wait_for_trigger:
-      - platform: state
-        entity_id: !input motion_sensor
-        to: "off"
+                - conditions:
+                    - condition: template
+                      value_template: "{{ (not (max_on | bool)) and (medium_on | bool) and (medium_brightness_group | length >
+                      0) }}"
+                  sequence:
+                    - service: switch.turn_on
+                      target:
+                        entity_id: !input medium_brightness_group
 
-  - delay: !input wait_period
+                - conditions:
+                    - condition: template
+                      value_template: "{{ (not (max_on | bool)) and (not (medium_on | bool)) and (low_brightness_group | length >
+                      0) }}"
+                  sequence:
+                    - service: switch.turn_on
+                      target:
+                        entity_id: !input low_brightness_group
 
-  - choose:
-      - conditions:
-          - condition: template
-            value_template: "{{ max_brightness_group | length > 0 }}"
-        sequence:
-          - service: switch.turn_off
-            target:
-              entity_id: "{{ max_brightness_group }}"
-  - choose:
-      - conditions:
-          - condition: template
-            value_template: "{{ medium_brightness_group | length > 0 }}"
-        sequence:
-          - service: switch.turn_off
-            target:
-              entity_id: "{{ medium_brightness_group }}"
-  - choose:
-      - conditions:
-          - condition: template
-            value_template: "{{ low_brightness_group | length > 0 }}"
-        sequence:
-          - service: switch.turn_off
-            target:
-              entity_id: "{{ low_brightness_group }}"
+    - wait_for_trigger:
+        - platform: state
+          entity_id: !input motion_sensor
+          to: "off"
+
+    - delay: !input wait_period
+
+    - choose:
+        - conditions:
+            - condition: template
+              value_template: "{{ not (skip_light | bool) }}"
+          sequence:
+            - choose:
+                - conditions:
+                    - condition: template
+                      value_template: "{{ max_on | bool and (max_brightness_group | length > 0) }}"
+                  sequence:
+                    - service: switch.turn_off
+                      target:
+                        entity_id: !input max_brightness_group
+
+                - conditions:
+                    - condition: template
+                      value_template: "{{ (not (max_on | bool)) and (medium_on | bool) and (medium_brightness_group | length >
+                      0) }}"
+                  sequence:
+                    - service: switch.turn_off
+                      target:
+                        entity_id: !input medium_brightness_group
+
+                - conditions:
+                    - condition: template
+                      value_template: "{{ (not (max_on | bool)) and (not (medium_on | bool)) and (low_brightness_group | length >
+                      0) }}"
+                  sequence:
+                    - service: switch.turn_off
+                      target:
+                        entity_id: !input low_brightness_group
