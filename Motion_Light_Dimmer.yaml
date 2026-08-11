@@ -218,6 +218,9 @@ action:
             data:
               brightness: "{{ brightness_value }}"
               color_temp: "{{ current_color_temp }}"
+          - service: switch.turn_on
+            target:
+              entity_id: "{{ light_entity }}"
 
   - wait_for_trigger:
       - platform: state
@@ -227,5 +230,8 @@ action:
   - delay: !input wait_period
 
   - service: light.turn_off
+    target:
+      entity_id: "{{ light_entity }}"
+  - service: switch.turn_off
     target:
       entity_id: "{{ light_entity }}"

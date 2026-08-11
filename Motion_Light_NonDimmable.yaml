@@ -141,30 +141,15 @@ action:
           - condition: template
             value_template: "{{ not skip_light }}"
         sequence:
-          - choose:
-              - conditions:
-                  - condition: template
-                    value_template: "{{ inputs.max_on }}"
-                sequence:
-                  - service: switch.turn_on
-                    target:
-                      entity_id: "{{ inputs.max_brightness_group }}"
-
-              - conditions:
-                  - condition: template
-                    value_template: "{{ inputs.medium_on }}"
-                sequence:
-                  - service: switch.turn_on
-                    target:
-                      entity_id: "{{ inputs.medium_brightness_group }}"
-
-              - conditions:
-                  - condition: template
-                    value_template: "{{ inputs.low_on }}"
-                sequence:
-                  - service: switch.turn_on
-                    target:
-                      entity_id: "{{ inputs.low_brightness_group }}"
+          - service: switch.turn_on
+            target:
+              entity_id: "{{ max_brightness_group }}"
+          - service: switch.turn_on
+            target:
+              entity_id: "{{ medium_brightness_group }}"
+          - service: switch.turn_on
+            target:
+              entity_id: "{{ low_brightness_group }}"
 
   - wait_for_trigger:
       - platform: state
@@ -175,5 +160,10 @@ action:
 
   - service: switch.turn_off
     target:
-      entity_id: >
-        {{ [inputs.max_brightness_group, inputs.medium_brightness_group, inputs.low_brightness_group] | flatten | list }}
+      entity_id: "{{ max_brightness_group }}"
+  - service: switch.turn_off
+    target:
+      entity_id: "{{ medium_brightness_group }}"
+  - service: switch.turn_off
+    target:
+      entity_id: "{{ low_brightness_group }}"
