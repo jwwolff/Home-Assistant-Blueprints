@@ -225,8 +225,8 @@ action:
             target:
               entity_id: !input light_entity
             data:
-              brightness: "{{ brightness_value }}"
-              color_temp: "{{ current_color_temp }}"
+              brightness_pct: "{{ brightness_value }}"
+              color_temp_kelvin: "{{ current_color_temp }}"
 
   - wait_for_trigger:
       - platform: state
