@@ -77,10 +77,10 @@ blueprint:
           domain: input_datetime
 
     active_time_end:
-      name: Active Time End (optional)
+      name: Enable
       description: >
-        Optional switch to enable/disable the active time range end. When
-        off, the automation is always active regardless of time.
+        Switch to enable/disable the automation. When off, the automation
+        will not run regardless of motion detection.
       selector:
         entity:
           domain: switch
