@@ -87,44 +87,44 @@ blueprint:
           unit_of_measurement: "%"
 
     morning_color_temp:
-      name: Morning Color Temp (mired)
-      description: "e.g. 350 = 2857 K, warm-white for mornings"
-      default: 350
+      name: Morning Color Temp
+      description: "warm-white for mornings"
+      default: 5000
       selector:
         number:
-          min: 153
-          max: 500
-          step: 1
+          min: 2200
+          max: 6500
+          step: 100
 
     day_color_temp:
       name: Day Color Temp (mired)
-      description: "e.g. 300 = 3333 K, neutral-white for daytime"
-      default: 300
+      description: "neutral-white for daytime"
+      default: 6500
       selector:
         number:
-          min: 153
-          max: 500
-          step: 1
+          min: 2200
+          max: 6500
+          step: 100
 
     evening_color_temp:
       name: Evening Color Temp (mired)
-      description: "e.g. 370 = 2703 K, warm-white for evenings"
-      default: 370
+      description: "warm-white for evenings"
+      default: 4000
       selector:
         number:
-          min: 153
-          max: 500
-          step: 1
+          min: 2200
+          max: 6500
+          step: 100
 
     night_color_temp:
       name: Night Color Temp (mired)
-      description: "e.g. 400 = 2500 K, very warm for nighttime"
-      default: 400
+      description: "very warm for nighttime"
+      default: 2200
       selector:
         number:
-          min: 153
-          max: 500
-          step: 1
+          min: 2200
+          max: 6500
+          step: 100
 
     luminance_sensor:
       name: Luminance Sensor
