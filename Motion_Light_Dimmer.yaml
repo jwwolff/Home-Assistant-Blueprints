@@ -195,7 +195,7 @@ variables:
     {% endif %}
 
   brightness_value: >
-    {{ (current_brightness | float / 100 * 255) | round | int }}
+    {{ current_brightness | float }}
 
   skip_light: >
     {% if luminance_sensor %}
