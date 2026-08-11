@@ -1,9 +1,8 @@
 blueprint:
   name: Advanced Motion Activated Light with Time-Based Dimming
   description: >
-    Turns a dimmable light on when motion detected, then off after motion clears.
+    Turns dimmable lights on when motion detected, then off after motion clears.
     Brightness and color temperature vary by time of day.
-    Also controls additional non-dimmable lights as a group.
   domain: automation
   input:
     light_entity:
@@ -210,8 +209,6 @@ condition:
 action:
   - choose:
       - conditions:
-          - condition: template
-            value_template: "{{ trigger.platform == 'state' }}"
           - condition: template
             value_template: "{{ not skip_light }}"
         sequence:
