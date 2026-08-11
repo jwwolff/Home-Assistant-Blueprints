@@ -81,15 +81,15 @@ blueprint:
             step: 10
             unit_of_measurement: lux
 
-  mode: restart
-  max_exceeded: silent
+mode: restart
+max_exceeded: silent
 
-  trigger:
+trigger:
     - platform: state
       entity_id: !input motion_sensor
       to: "on"
 
-  variables:
+variables:
     max_brightness_group: !input max_brightness_group
     medium_brightness_group: !input medium_brightness_group
     low_brightness_group: !input low_brightness_group
@@ -114,12 +114,12 @@ blueprint:
       {% endfor %}
       {{ ns.block }}
 
-  condition:
+condition:
     - condition: state
       entity_id: !input enable_switch
       state: "on"
 
-  action:
+action:
     - choose:
         - conditions:
             - condition: template
