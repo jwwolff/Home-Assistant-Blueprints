@@ -170,7 +170,7 @@ variables:
   luminance_sensor: !input luminance_sensor
   luminance_threshold: !input luminance_threshold
 
-  current_brightness: >
+  brightness_value: >
     {% set h = now().hour %}
     {% if h >= 6 and h < 9 %}
       {{ morning_brightness }}
@@ -193,9 +193,6 @@ variables:
     {% else %}
       {{ night_color_temp }}
     {% endif %}
-
-  brightness_value: >
-    {{ current_brightness | float }}
 
   skip_light: >
     {% if luminance_sensor %}
