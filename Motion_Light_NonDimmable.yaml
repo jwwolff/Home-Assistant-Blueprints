@@ -53,7 +53,7 @@ blueprint:
           step: 15
           unit_of_measurement: seconds
 
-    active_time_end:
+    Enable_Switch:
       name: Enable
       description: >
         Input boolean helper to enable/disable the automation. When off, the
@@ -94,7 +94,6 @@ trigger:
     entity_id: !input motion_sensor
     to: "on"
 
-
 variables:
   max_brightness_group: !input max_brightness_group
   medium_brightness_group: !input medium_brightness_group
@@ -132,7 +131,7 @@ variables:
 
 condition:
   - condition: state
-    entity_id: !input active_time_end
+    entity_id: !input Enable_Switch
     state: "on"
 
 action:
@@ -141,15 +140,30 @@ action:
           - condition: template
             value_template: "{{ not skip_light }}"
         sequence:
-          - service: switch.turn_on
-            target:
-              entity_id: "{{ max_brightness_group }}"
-          - service: switch.turn_on
-            target:
-              entity_id: "{{ medium_brightness_group }}"
-          - service: switch.turn_on
-            target:
-              entity_id: "{{ low_brightness_group }}"
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ max_brightness_group | length > 0 }}"
+                sequence:
+                  - service: switch.turn_on
+                    target:
+                      entity_id: "{{ max_brightness_group }}"
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ medium_brightness_group | length > 0 }}"
+                sequence:
+                  - service: switch.turn_on
+                    target:
+                      entity_id: "{{ medium_brightness_group }}"
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ low_brightness_group | length > 0 }}"
+                sequence:
+                  - service: switch.turn_on
+                    target:
+                      entity_id: "{{ low_brightness_group }}"
 
   - wait_for_trigger:
       - platform: state
@@ -158,12 +172,27 @@ action:
 
   - delay: !input wait_period
 
-  - service: switch.turn_off
-    target:
-      entity_id: "{{ max_brightness_group }}"
-  - service: switch.turn_off
-    target:
-      entity_id: "{{ medium_brightness_group }}"
-  - service: switch.turn_off
-    target:
-      entity_id: "{{ low_brightness_group }}"
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ max_brightness_group | length > 0 }}"
+        sequence:
+          - service: switch.turn_off
+            target:
+              entity_id: "{{ max_brightness_group }}"
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ medium_brightness_group | length > 0 }}"
+        sequence:
+          - service: switch.turn_off
+            target:
+              entity_id: "{{ medium_brightness_group }}"
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ low_brightness_group | length > 0 }}"
+        sequence:
+          - service: switch.turn_off
+            target:
+              entity_id: "{{ low_brightness_group }}"

@@ -7,7 +7,7 @@ blueprint:
   input:
     light_entity:
       name: Light(s)
-      description: Select the non-dimmable light entities.
+      description: Select the dimmable light entities.
       selector:
         entity:
           domain: light
@@ -36,7 +36,7 @@ blueprint:
           step: 15
           unit_of_measurement: seconds
 
-    active_time_end:
+    Enable_Switch:
       name: Enable
       description: >
         Input boolean helper to enable/disable the automation. When off, the
@@ -161,7 +161,6 @@ trigger:
     entity_id: !input motion_sensor
     to: "on"
 
-
 variables:
   light_entity: !input light_entity
   wait_period: !input wait_period
@@ -203,7 +202,7 @@ variables:
 
 condition:
   - condition: state
-    entity_id: !input active_time_end
+    entity_id: !input Enable_Switch
     state: "on"
 
 action:
@@ -212,12 +211,17 @@ action:
           - condition: template
             value_template: "{{ not skip_light }}"
         sequence:
-          - service: light.turn_on
-            target:
-              entity_id: "{{ light_entity }}"
-            data:
-              brightness: "{{ brightness_value }}"
-              color_temp: "{{ current_color_temp }}"
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ light_entity | length > 0 }}"
+                sequence:
+                  - service: light.turn_on
+                    target:
+                      entity_id: "{{ light_entity }}"
+                    data:
+                      brightness: "{{ brightness_value }}"
+                      color_temp: "{{ current_color_temp }}"
 
   - wait_for_trigger:
       - platform: state
@@ -226,6 +230,11 @@ action:
 
   - delay: !input wait_period
 
-  - service: light.turn_off
-    target:
-      entity_id: "{{ light_entity }}"
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ light_entity | length > 0 }}"
+        sequence:
+          - service: light.turn_off
+            target:
+              entity_id: "{{ light_entity }}"
