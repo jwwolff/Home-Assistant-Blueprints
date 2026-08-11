@@ -53,15 +53,6 @@ blueprint:
           step: 15
           unit_of_measurement: seconds
 
-    active_time_start:
-      name: Active Time Start (optional)
-      description: >
-        Optional start of time range during which the automation is active.
-        Leave blank to always be active.
-      selector:
-        entity:
-          domain: input_datetime
-
     active_time_end:
       name: Enable
       description: >
